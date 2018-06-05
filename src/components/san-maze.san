@@ -1,0 +1,64 @@
+<template>
+    <div class="maze">
+        <div s-for="i in mazeMap">
+                <div class="maze-block {{e.isWall?'maze-block-disabled':''}}" s-for="e in i"></div>
+        </div>
+    </div>
+</template>
+
+<script>
+    import Maze from '../maze/maze'
+    export default {
+        initData:function () {
+            let mazeMap = [];
+            for (let i = 0 ;i < 100;i ++) {
+                mazeMap.push([]);
+                for(let j = 0;j < 100;j ++) {
+                    mazeMap[i].push({
+                        x:i,
+                        y:j,
+                        isVisited:false,
+                        isStart:false,
+                        isWall:true,
+                        isEnd:false,
+                    })
+                }
+            }
+
+            // for (let i = 0;i < 30;i ++) {
+            //     for(let j = 0;j < 2;j ++) {
+            //         mazeMap[Math.floor(i)][Math.floor(Math.random() * 29)].isWall = false;
+            //         mazeMap[Math.floor(i)][Math.floor(Math.random() * 29)].isVisited = true;
+            //     }
+            // }
+
+            let maze = new Maze(mazeMap,{x:1,y:1},{x:29,y:29});
+            maze.initMaze();
+            console.log(maze.getMap());
+
+            return{
+                mazeMap,
+            }
+        }
+    }
+</script>
+
+<style scoped>
+    .maze {
+        display: block;
+        width:700px;
+        height:700px;
+        border:10px solid darkgrey;
+    }
+    .maze-block {
+        box-sizing: border-box;
+        float: left;
+        border:1px solid black;
+        width:calc(100% / 100);
+        height: calc(100% / 100);
+        background: white;
+    }
+    .maze-block-disabled {
+        background: grey;
+    }
+</style>
