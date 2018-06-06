@@ -1,19 +1,40 @@
 <template>
-    <div class="maze">
-        <div s-for="i in mazeMap">
-                <div class="maze-block {{e.isWall?'maze-block-disabled':''}}" s-for="e in i"></div>
+    <div class="mazeWrap">
+        <div class="maze">
+            <div s-for="i in mazeMap">
+                    <div class="maze-block 
+                        {{e.isWall?'maze-block-disabled':''}} 
+                        {{e.isStart?'maze-block-start':''}} 
+                        {{e.isEnd?'maze-block-end':''}}
+                        {{e.isRoad?'maze-block-road':''}}" 
+                        s-for="e in i">
+                    </div>
+            </div>
+        </div>
+        <div class="buttonControler">
+            <button on-click="resetMap">重设地图</button>
+            <button on-click="getPath">获取路径</button>
         </div>
     </div>
 </template>
 
 <script>
-    import Maze from '../maze/maze'
+    import Maze from '../maze/maze';
+
+    const sleep = time => {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve();
+            },time)
+        })
+    }
+
     export default {
         initData:function () {
             let mazeMap = [];
-            for (let i = 0 ;i < 100;i ++) {
+            for (let i = 0 ;i < 70;i ++) {
                 mazeMap.push([]);
-                for(let j = 0;j < 100;j ++) {
+                for(let j = 0;j < 70;j ++) {
                     mazeMap[i].push({
                         x:i,
                         y:j,
@@ -21,23 +42,57 @@
                         isStart:false,
                         isWall:true,
                         isEnd:false,
+                        neighbors:[],
+                        pre:undefined,
+                        isRoad:false,
                     })
                 }
             }
 
-            // for (let i = 0;i < 30;i ++) {
-            //     for(let j = 0;j < 2;j ++) {
-            //         mazeMap[Math.floor(i)][Math.floor(Math.random() * 29)].isWall = false;
-            //         mazeMap[Math.floor(i)][Math.floor(Math.random() * 29)].isVisited = true;
-            //     }
-            // }
+            let maze = new Maze(mazeMap,{x:0,y:0},{x:69,y:69});
 
-            let maze = new Maze(mazeMap,{x:1,y:1},{x:29,y:29});
             maze.initMaze();
-            console.log(maze.getMap());
+            maze.findPath();
 
             return{
                 mazeMap,
+                maze
+            }
+        },
+
+        resetMap () {
+            let mazeMap = [];
+            for (let i = 0 ;i < 70;i ++) {
+                mazeMap.push([]);
+                for(let j = 0;j < 70;j ++) {
+                    mazeMap[i].push({
+                        x:i,
+                        y:j,
+                        isVisited:false,
+                        isStart:false,
+                        isWall:true,
+                        isEnd:false,
+                        neighbors:[],
+                        pre:undefined,
+                        isRoad:false,
+                    })
+                }
+            }
+
+            let maze = new Maze(mazeMap,{x:0,y:0},{x:69,y:69});
+
+            maze.initMaze();
+            maze.findPath();
+
+            this.data.set('mazeMap',maze.getMap());
+            this.data.set('maze',maze);
+        },
+
+        async getPath () {
+            const path = this.data.get('maze').getPath();
+            for(let i = 0; i < path.length; i ++) {
+                this.data.set(`mazeMap[${path[i].x}][${path[i].y}].isRoad`, true);
+                await sleep(50);
             }
         }
     }
@@ -53,12 +108,57 @@
     .maze-block {
         box-sizing: border-box;
         float: left;
-        border:1px solid black;
-        width:calc(100% / 100);
-        height: calc(100% / 100);
+        //  border:1px solid black;
+        width:calc(100% / 70);
+        height: calc(100% / 70);
         background: white;
     }
     .maze-block-disabled {
         background: grey;
+    }
+    .maze-block-start {
+        background:red;
+    }
+
+    .maze-block-end {
+        background:green;
+    }
+
+    .maze-block-road {
+        transition:all 0.5s;
+        background:orange;
+    }
+
+    .buttonControler {
+        float:right;
+        position:relative;
+        top:-450px;
+        right:10px;
+    }
+
+    .buttonControler button {
+        width:80px;
+        height:50px;
+        margin-bottom:20px;
+        display:block;
+        border:0px;
+        color:white;
+        background:#3f88e2;
+        border-radius:2px;
+        transition:all 0.5s;
+    }
+
+    .buttonControler button:hover {
+        background:#78b4ff;
+    }
+
+    .mazeWrap {
+        width:850px;
+        border:1px solid grey;
+        padding:30px;
+        margin:0 auto;
+        border-radius:3px;
+        border-color:#c1c1c1;
+        box-shadow:0 2px 12px 0 rgba(0,0,0,.1);
     }
 </style>

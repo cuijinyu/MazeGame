@@ -15,33 +15,44 @@ export default class Maze {
      * 随机prim算法，生成迷宫
      */
     initMaze () {
+        console.log("I am inited");
         let visitedList = [];// 被访问过的节点
         this.colLength = this.map.length;
         this.rowLength = this.map[0].length;
+        this.startNode = this.map[this.start.x][this.start.y];
+        this.endNode = this.map[this.end.x][this.end.y];
+
+        for(let i = 0; i < this.colLength; i ++) {
+            for(let j = 0; j < this.rowLength; j ++) {
+                this.map[i][j].isVisited = false;
+                this.map[i][j].isWall = true;
+            }
+        }
 
         this.map[this.start.x][this.start.y].isVisited = true;
+        this.map[this.start.x][this.start.y].isStart = true;
         this.map[this.end.x][this.end.y].isVisited = true;
         this.map[this.start.x][this.start.y].isWall = false;
         this.map[this.end.x][this.end.y].isWall = false;
+        this.map[this.end.x][this.end.y].isEnd = true;
+        
 
-        // let startNeighbors = this.getTrueNeighborhood(this.start.x, this.start.y);
-        // let endNeighbors = this.getTrueNeighborhood(this.end.x, this.end.y);
-        //
-        // for(let s in startNeighbors) {
-        //     console.log(startNeighbors[s]);
-        //     if(startNeighbors[s] !== undefined) {
-        //         startNeighbors[s].isWall = false;
-        //     }
-        // }
-        //
-        // for(let s in endNeighbors) {
-        //     console.log(startNeighbors[s]);
-        //     if(endNeighbors[s] !== undefined) {
-        //         endNeighbors[s].isWall = false;
-        //     }
-        // }
+        let startNeighbors = this.getTrueNeighborhood(this.start.x, this.start.y);
+        let endNeighbors = this.getTrueNeighborhood(this.end.x, this.end.y);
+        
+        for(let s in startNeighbors) {
+            if(startNeighbors[s] !== undefined) {
+                startNeighbors[s].isWall = false;
+            }
+        }
+        
+        for(let s in endNeighbors) {
+            if(endNeighbors[s] !== undefined) {
+                endNeighbors[s].isWall = false;
+            }
+        }
 
-        let currentNode = this.map[this.random(this.rowLength - 1)][this.random(this.colLength - 1)];
+        let currentNode = this.map[this.random(this.rowLength)][this.random(this.colLength)];
 
         currentNode.isVisited = true;
         currentNode.isWall = false;
@@ -94,7 +105,57 @@ export default class Maze {
      */
     findPath () {
 
+        /**
+         * 令所有节点为未被访问
+         */
+        for (let i = 0; i < this.colLength; i ++) {
+            for (let j = 0; j < this.rowLength; j ++) {
+                this.map[i][j].isVisited = false;
+            }
+        }
+
+        this.path = []; //  路径数组
+        let queue = []; //  辅助队列
+        this.startNode.isVisited = true;
+        queue.push(this.startNode);
+        while (queue.length) {
+            let first = queue.shift();
+            first.neighbors = [];
+            let tempNeightbors = this.getTrueNeighborhood(first.x, first.y);
+            for(let i in tempNeightbors) {
+                if( tempNeightbors[i] !== undefined) {
+                    tempNeightbors[i].pre = {
+                        x:first.x,
+                        y:first.y,
+                    }
+                    first.neighbors.push(tempNeightbors[i]);
+                }
+            }
+
+            for(let i in first.neighbors) {
+                first.neighbors[i].isVisited = true;
+                if(first.neighbors[i].isWall === false) {
+                    queue.push(first.neighbors[i]);
+                }
+            }
+            if(queue.length > 0){
+                let tempNode = queue[0];
+
+                if(tempNode.x === this.endNode.x && tempNode.y === this.endNode.y) {
+                    this.endPreNode = tempNode;
+                    break;
+                }
+            }
+            
+        }
+
+        let tempNode = this.endPreNode;
+        while (tempNode.pre !== undefined) {
+            this.path.unshift(tempNode.pre);
+            tempNode = this.map[tempNode.pre.x][tempNode.pre.y];
+        }
     }
+
 
     /**
      * 生成随机点
@@ -105,7 +166,7 @@ export default class Maze {
         return Math.floor(Math.random() * i)
     }
 
-    /**
+    /** 
      * 获取某个节点的真实旁节点，为start和end准备
      * @param x
      * @param y
@@ -117,13 +178,13 @@ export default class Maze {
             leftNode = undefined,
             rightNode = undefined;
 
-        if (x - 1 > 0  && !this.map[x - 1][y].isVisited) {
+        if (x - 1 > -1  && !this.map[x - 1][y].isVisited) {
             leftNode = this.map[x - 1][y];
         }
         if (x + 1 < this.colLength && !this.map[x + 1][y].isVisited) {
             rightNode = this.map[x + 1][y];
         }
-        if (y - 1 > 0 && !this.map[x][y - 1].isVisited) {
+        if (y - 1 > -1 && !this.map[x][y - 1].isVisited) {
             downNode = this.map[x][y - 1];
         }
         if (y + 1 < this.rowLength && !this.map[x][y + 1].isVisited) {
@@ -149,16 +210,16 @@ export default class Maze {
             leftNode = undefined,
             rightNode = undefined;
 
-        if (x - 2 > 1  && !this.map[x - 2][y].isVisited) {
+        if (x - 2 > -1  && !this.map[x - 2][y].isVisited) {
             leftNode = this.map[x - 2][y];
         }
-        if (x + 2 < this.colLength - 1 && !this.map[x + 2][y].isVisited) {
+        if (x + 2 < this.colLength && !this.map[x + 2][y].isVisited) {
             rightNode = this.map[x + 2][y];
         }
-        if (y - 2 > 1 && !this.map[x][y - 2].isVisited) {
+        if (y - 2 > -1 && !this.map[x][y - 2].isVisited) {
             downNode = this.map[x][y - 2];
         }
-        if (y + 2 < this.rowLength - 1 && !this.map[x][y + 2].isVisited) {
+        if (y + 2 < this.rowLength && !this.map[x][y + 2].isVisited) {
             upNode = this.map[x][y + 2];
         }
         return {
@@ -171,5 +232,9 @@ export default class Maze {
 
     getMap () {
         return this.map;
+    }
+
+    getPath () {
+        return this.path;
     }
 }
