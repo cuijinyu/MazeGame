@@ -3,8 +3,8 @@ import san,{DataTypes} from 'san';
 import sanMaze from './components/san-maze.san'
 
 const MyApp = san.defineComponent({
-    template: `<div style="width:100%;">
-                    <div style="margin:0 auto;">
+    template: `<div style="width:100%;height:750px;">
+                    <div>
                         <san-maze></san-maze>
                     </div>
                </div>`,

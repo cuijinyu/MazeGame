@@ -6,7 +6,8 @@
                         {{e.isWall?'maze-block-disabled':''}} 
                         {{e.isStart?'maze-block-start':''}} 
                         {{e.isEnd?'maze-block-end':''}}
-                        {{e.isRoad?'maze-block-road':''}}" 
+                        {{e.isRoad?'maze-block-road':''}}
+                        {{e.isCurr?'maze-block-current':''}}" 
                         s-for="e in i">
                     </div>
             </div>
@@ -14,12 +15,26 @@
         <div class="buttonControler">
             <button on-click="resetMap">重设地图</button>
             <button on-click="getPath">获取路径</button>
+            <button on-click="startGame">开始游戏</button>
+            <button on-click="help">查看帮助</button>
         </div>
+        <modal
+        value="{{modal1}}"
+        width="{{360}}"
+        title="帮助"
+        on-ok="ok"
+        on-close="closeModal1">
+            <p>点击获取路径可以获得由计算机生成的路径路线</p>
+            <p>点击重设地图可以重新生成地图</p>
+            <p>点击开始游戏可以开始手工迷宫游戏</p>
+        </modal>
     </div>
 </template>
 
 <script>
     import Maze from '../maze/maze';
+    import Game from '../game/game';
+    import {Button, Message, Modal} from 'san-iview';
 
     const sleep = time => {
         return new Promise(resolve => {
@@ -45,18 +60,24 @@
                         neighbors:[],
                         pre:undefined,
                         isRoad:false,
+                        isCurr:false,
                     })
                 }
             }
 
             let maze = new Maze(mazeMap,{x:0,y:0},{x:69,y:69});
+            let game = new Game(maze);
 
             maze.initMaze();
             maze.findPath();
 
             return{
                 mazeMap,
-                maze
+                maze,
+                modal1:false,
+                game,
+                gameFlag:false,
+                currentNode:undefined,
             }
         },
 
@@ -75,17 +96,21 @@
                         neighbors:[],
                         pre:undefined,
                         isRoad:false,
+                        isCurr:false,
                     })
                 }
             }
 
             let maze = new Maze(mazeMap,{x:0,y:0},{x:69,y:69});
+            let game = new Game(maze);
 
             maze.initMaze();
             maze.findPath();
 
-            this.data.set('mazeMap',maze.getMap());
-            this.data.set('maze',maze);
+            this.data.set('mazeMap', maze.getMap());
+            this.data.set('maze', maze);
+            this.data.set('game', game);
+            this.data.set('gameFlag', false);
         },
 
         async getPath () {
@@ -93,6 +118,89 @@
             for(let i = 0; i < path.length; i ++) {
                 this.data.set(`mazeMap[${path[i].x}][${path[i].y}].isRoad`, true);
                 await sleep(50);
+            }
+        },
+
+        startGame () {
+            let game = this.data.get('game');
+            game.startGame();
+            this.data.set('gameFlag',true);
+            this.data.set('mazeMap[0][0].isCurr',true);
+            this.data.set('currentNode',this.data.get('mazeMap[0][0]'));
+            console.log(this.data.get('currentNode'));
+        },
+
+        help () {
+            this.data.set('modal1',true);
+        },
+
+        closeModal1 () {
+            this.data.set('modal1', false);
+        },
+
+        ok () {
+            this.data.set('modal1', false);
+        },
+
+        components: {
+            'modal':Modal,
+            'i-button':Button
+        },
+
+        created () {
+            let _this = this;
+            document.onkeydown = function (e) {
+                let key = window.event.keyCode;
+                switch(key){
+                    case 37:
+                        if(_this.data.get('gameFlag')){
+                            let game = _this.data.get('game');
+                            let pos = game.moveLeft();
+                            console.log(pos);
+                            if(pos !== undefined) {
+                                _this.data.set(`mazeMap[${pos.x}][${pos.y}].isCurr`,true);
+                                _this.data.set(`mazeMap[${_this.data.get('currentNode').x}][${_this.data.get('currentNode').y}].isCurr`,false);
+                                console.log(_this.data.get('currentNode'));
+                                _this.data.set('currentNode',_this.data.get(`mazeMap[${pos.x}][${pos.y}]`));
+                            }
+                        }
+                        break;
+                    case 38:
+                        if(_this.data.get('gameFlag')){
+                            let pos = _this.data.get('game').moveUp();
+                            console.log(pos);
+                            if(pos !== undefined) {
+                                _this.data.set(`mazeMap[${pos.x}][${pos.y}].isCurr`,true);
+                               _this.data.set(`mazeMap[${_this.data.get('currentNode').x}][${_this.data.get('currentNode').y}].isCurr`,false);
+                                console.log(_this.data.get('currentNode'));
+                                _this.data.set('currentNode',_this.data.get(`mazeMap[${pos.x}][${pos.y}]`));
+                            }
+                        }
+                        break;
+                    case 39:
+                        if(_this.data.get('gameFlag')){
+                            let pos = _this.data.get('game').moveRight();
+                            console.log(pos);
+                            if(pos !== undefined) {
+                                _this.data.set(`mazeMap[${pos.x}][${pos.y}].isCurr`,true);
+                                _this.data.set(`mazeMap[${_this.data.get('currentNode').x}][${_this.data.get('currentNode').y}].isCurr`,false);
+                                console.log(_this.data.get('currentNode'));
+                                _this.data.set('currentNode',_this.data.get(`mazeMap[${pos.x}][${pos.y}]`));
+                            }
+                        }
+                        break;
+                    case 40:
+                        if(_this.data.get('gameFlag')){
+                            let pos = _this.data.get('game').moveDown();
+                            console.log(pos);
+                            if(pos !== undefined) {
+                                _this.data.set(`mazeMap[${pos.x}][${pos.y}].isCurr`,true);
+                                _this.data.set(`mazeMap[${_this.data.get('currentNode').x}][${_this.data.get('currentNode').y}].isCurr`,false);
+                                _this.data.set('currentNode',_this.data.get(`mazeMap[${pos.x}][${pos.y}]`));
+                            }
+                        }
+                        break;
+                }
             }
         }
     }
@@ -108,7 +216,6 @@
     .maze-block {
         box-sizing: border-box;
         float: left;
-        //  border:1px solid black;
         width:calc(100% / 70);
         height: calc(100% / 70);
         background: white;
@@ -133,7 +240,8 @@
         float:right;
         position:relative;
         top:-450px;
-        right:10px;
+        right:0px;
+        height:0px;
     }
 
     .buttonControler button {
@@ -160,5 +268,9 @@
         border-radius:3px;
         border-color:#c1c1c1;
         box-shadow:0 2px 12px 0 rgba(0,0,0,.1);
+    }
+
+    .maze-block-current {
+        background:blue !important;
     }
 </style>
