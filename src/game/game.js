@@ -69,7 +69,6 @@ export default class Game {
     judge () {
         let {x, y} = this.current;
         if(x === this.end.x && y === this.end.y) {
-            alert("You win!");
             return true;
         }else {
             return false;

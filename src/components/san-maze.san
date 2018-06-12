@@ -28,6 +28,15 @@
             <p>点击重设地图可以重新生成地图</p>
             <p>点击开始游戏可以开始手工迷宫游戏</p>
         </modal>
+
+        <modal
+        value="{{modal2}}"
+        width="{{360}}"
+        title="提示"
+        on-ok="closeModal2"
+        on-close="closeModal2">
+            <p>恭喜你，你找到了出口！</p>
+        </modal>
     </div>
 </template>
 
@@ -47,9 +56,9 @@
     export default {
         initData:function () {
             let mazeMap = [];
-            for (let i = 0 ;i < 70;i ++) {
+            for (let i = 0 ;i < 100;i ++) {
                 mazeMap.push([]);
-                for(let j = 0;j < 70;j ++) {
+                for(let j = 0;j < 100;j ++) {
                     mazeMap[i].push({
                         x:i,
                         y:j,
@@ -65,7 +74,7 @@
                 }
             }
 
-            let maze = new Maze(mazeMap,{x:0,y:0},{x:69,y:69});
+            let maze = new Maze(mazeMap,{x:0,y:0},{x:99,y:99});
             let game = new Game(maze);
 
             maze.initMaze();
@@ -75,6 +84,7 @@
                 mazeMap,
                 maze,
                 modal1:false,
+                modal2:false,
                 game,
                 gameFlag:false,
                 currentNode:undefined,
@@ -83,9 +93,9 @@
 
         resetMap () {
             let mazeMap = [];
-            for (let i = 0 ;i < 70;i ++) {
+            for (let i = 0 ;i < 100;i ++) {
                 mazeMap.push([]);
-                for(let j = 0;j < 70;j ++) {
+                for(let j = 0;j < 100;j ++) {
                     mazeMap[i].push({
                         x:i,
                         y:j,
@@ -101,7 +111,7 @@
                 }
             }
 
-            let maze = new Maze(mazeMap,{x:0,y:0},{x:69,y:69});
+            let maze = new Maze(mazeMap,{x:0,y:0},{x:99,y:99});
             let game = new Game(maze);
 
             maze.initMaze();
@@ -127,7 +137,6 @@
             this.data.set('gameFlag',true);
             this.data.set('mazeMap[0][0].isCurr',true);
             this.data.set('currentNode',this.data.get('mazeMap[0][0]'));
-            console.log(this.data.get('currentNode'));
         },
 
         help () {
@@ -140,6 +149,10 @@
 
         ok () {
             this.data.set('modal1', false);
+        },
+
+        closeModal2 ()  {
+            this.data.set('modal2', false);
         },
 
         components: {
@@ -160,7 +173,6 @@
                             if(pos !== undefined) {
                                 _this.data.set(`mazeMap[${pos.x}][${pos.y}].isCurr`,true);
                                 _this.data.set(`mazeMap[${_this.data.get('currentNode').x}][${_this.data.get('currentNode').y}].isCurr`,false);
-                                console.log(_this.data.get('currentNode'));
                                 _this.data.set('currentNode',_this.data.get(`mazeMap[${pos.x}][${pos.y}]`));
                             }
                         }
@@ -168,11 +180,9 @@
                     case 38:
                         if(_this.data.get('gameFlag')){
                             let pos = _this.data.get('game').moveUp();
-                            console.log(pos);
                             if(pos !== undefined) {
                                 _this.data.set(`mazeMap[${pos.x}][${pos.y}].isCurr`,true);
                                _this.data.set(`mazeMap[${_this.data.get('currentNode').x}][${_this.data.get('currentNode').y}].isCurr`,false);
-                                console.log(_this.data.get('currentNode'));
                                 _this.data.set('currentNode',_this.data.get(`mazeMap[${pos.x}][${pos.y}]`));
                             }
                         }
@@ -180,11 +190,9 @@
                     case 39:
                         if(_this.data.get('gameFlag')){
                             let pos = _this.data.get('game').moveRight();
-                            console.log(pos);
                             if(pos !== undefined) {
                                 _this.data.set(`mazeMap[${pos.x}][${pos.y}].isCurr`,true);
                                 _this.data.set(`mazeMap[${_this.data.get('currentNode').x}][${_this.data.get('currentNode').y}].isCurr`,false);
-                                console.log(_this.data.get('currentNode'));
                                 _this.data.set('currentNode',_this.data.get(`mazeMap[${pos.x}][${pos.y}]`));
                             }
                         }
@@ -192,14 +200,18 @@
                     case 40:
                         if(_this.data.get('gameFlag')){
                             let pos = _this.data.get('game').moveDown();
-                            console.log(pos);
                             if(pos !== undefined) {
                                 _this.data.set(`mazeMap[${pos.x}][${pos.y}].isCurr`,true);
                                 _this.data.set(`mazeMap[${_this.data.get('currentNode').x}][${_this.data.get('currentNode').y}].isCurr`,false);
                                 _this.data.set('currentNode',_this.data.get(`mazeMap[${pos.x}][${pos.y}]`));
                             }
                         }
-                        break;
+                }
+
+                if (_this.data.get('game').judge() === true) {
+                    _this.data.set('modal2', true);
+                }else {
+                    _this.data.set('modal2', false);
                 }
             }
         }
@@ -216,8 +228,8 @@
     .maze-block {
         box-sizing: border-box;
         float: left;
-        width:calc(100% / 70);
-        height: calc(100% / 70);
+        width:calc(100% / 100);
+        height: calc(100% / 100);
         background: white;
     }
     .maze-block-disabled {
